@@ -1,0 +1,23 @@
+global:
+  # scrape_interval is set to the global default (1 minute).
+  # evaluation_interval is set to the global default (1 minute).
+  # scrape_timeout is set to the global default (10s).
+
+scrape_configs:
+  # metrics_path defaults to '/metrics'
+  # scheme defaults to 'http'.
+  - job_name: "paas metrics"
+    static_configs:
+      - targets: [ "${EXPORTER_URL}" ]
+
+remote_read:
+  - url: ${INFLUXDB_READ_URL}
+    basic_auth:
+      username: ${INFLUXDB_READ_USERNAME}
+      password: ${INFLUXDB_READ_PASSWORD}
+
+remote_write:
+  - url: ${INFLUXDB_WRITE_URL}
+    basic_auth:
+      username: ${INFLUXDB_WRITE_USERNAME}
+      password: ${INFLUXDB_WRITE_PASSWORD}

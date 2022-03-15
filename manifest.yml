@@ -1,0 +1,43 @@
+---
+applications:
+- name: ukraine-sponsor-resettlement-monitoring-prometheus
+  docker:
+  instances: 1
+  memory: 1G
+  disk_quota: 1G
+  routes:
+  - route: ukraine-sponsor-resettlement-monitoring-prometheus.apps.internal
+  services:
+  - ukraine-sponsor-resettlement-monitoring-prometheus-db
+
+- name: ukraine-sponsor-resettlement-monitoring-prometheus-exporter
+  buildpacks:
+  - go_buildpack
+  instances: 1
+  memory: 100M
+  routes:
+  - route: ukraine-sponsor-resettlement-monitoring-prometheus-exporter.apps.internal
+  env:
+    GOPACKAGENAME: github.com/alphagov/paas-prometheus-exporter
+
+- name: ukraine-sponsor-resettlement-monitoring-grafana
+  docker:
+    image: grafana/grafana-oss:8.4.3
+  instances: 1
+  memory: 512M
+  env:
+    GF_SERVER_ROOT_URL: https://ukraine-sponsor-resettlement-monitoring-grafana.london.cloudapps.digital
+    GF_SERVER_HTTP_ADDR: "0.0.0.0"
+    GF_DATABASE_SSL_MODE: "require"
+    GF_ALERTING_ENABLED: true
+    GF_SMTP_ENABLED: true
+  command: >
+    export GF_SERVER_HTTP_PORT="${PORT}" &&
+    export GF_DATABASE_URL="${DATABASE_URL}" &&
+    export GF_SECURITY_ADMIN_USER="${GRAFANA_ADMIN_USERNAME}" &&
+    export GF_SECURITY_ADMIN_PASSWORD="${GRAFANA_ADMIN_PASSWORD}" &&
+    /run.sh
+  routes:
+    - route: ukraine-sponsor-resettlement-monitoring-grafana.london.cloudapps.digital
+  services:
+    - ukraine-sponsor-resettlement-monitoring-grafana-db

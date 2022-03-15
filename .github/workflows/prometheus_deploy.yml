@@ -1,0 +1,45 @@
+name: Prometheus deployment on GOV.UK PaaS
+
+on: workflow_dispatch
+
+env:
+  REGISTRY: ghcr.io
+  DOCKER_IMAGE: communitiesuk/ukraine-sponsor-resettlement-monitoring/prometheus
+  APP_NAME: ukraine-sponsor-resettlement-monitoring-prometheus
+  EXPORTER_NAME: ukraine-sponsor-resettlement-monitoring-prometheus-exporter
+  EXPORTER_URL: ukraine-sponsor-resettlement-monitoring-prometheus-exporter.apps.internal:8080
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Install Cloud Foundry CLI
+        run: |
+          wget -q -O - https://packages.cloudfoundry.org/debian/cli.cloudfoundry.org.key | sudo apt-key add -
+          echo "deb https://packages.cloudfoundry.org/debian stable main" | sudo tee /etc/apt/sources.list.d/cloudfoundry-cli.list
+          sudo apt-get update
+          sudo apt-get install cf8-cli
+
+      - name: Deploy Prometheus to GOV.UK PaaS
+        env:
+          APP_NAME: ${{ env.APP_NAME }}
+          EXPORTER_NAME: ${{ env.EXPORTER_NAME }}
+          EXPORTER_URL: ${{ env.EXPORTER_URL }}
+          CF_API_ENDPOINT: ${{ secrets.CF_API_ENDPOINT }}
+          CF_ORG: ${{ secrets.CF_ORG }}
+          CF_SPACE: ${{ secrets.CF_SPACE }}
+          CF_DEPLOY_USERNAME: ${{ secrets.CF_DEPLOY_USERNAME}}
+          CF_DEPLOY_PASSWORD: ${{ secrets.CF_DEPLOY_PASSWORD }}
+          DOCKER_TAG: '${{ env.REGISTRY }}/${{ env.DOCKER_IMAGE }}:latest'
+        run: |
+          cf api $CF_API_ENDPOINT
+          cf auth $CF_DEPLOY_USERNAME $CF_DEPLOY_PASSWORD
+          cf target -o $CF_ORG -s $CF_SPACE
+          cf set-env $APP_NAME EXPORTER_URL $EXPORTER_URL
+          CF_DOCKER_PASSWORD=${{ secrets.GITHUB_TOKEN }} cf push $APP_NAME \
+            --docker-image $DOCKER_TAG \
+            --docker-username ${{ github.actor }}
+          cf add-network-policy $APP_NAME $EXPORTER_NAME

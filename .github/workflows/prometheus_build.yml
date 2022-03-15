@@ -1,0 +1,28 @@
+name: Build Prometheus docker image
+
+on: workflow_dispatch
+
+env:
+  REGISTRY: ghcr.io
+  DOCKER_IMAGE: communitiesuk/ukraine-sponsor-resettlement-monitoring/prometheus
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v1
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          push: true
+          tags: '${{ env.REGISTRY }}/${{ env.DOCKER_IMAGE }}:latest'
