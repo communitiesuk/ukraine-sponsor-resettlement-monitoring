@@ -38,11 +38,6 @@ jobs:
           cf api $CF_API_ENDPOINT
           cf auth $CF_DEPLOY_USERNAME $CF_DEPLOY_PASSWORD
           cf target -o $CF_ORG -s $CF_SPACE
-          CF_DOCKER_PASSWORD=${{ secrets.DOCKER_PAT }} cf push --no-start $APP_NAME \
-            --docker-image $DOCKER_TAG \
-            --docker-username ${{ github.actor }}
           cf set-env $APP_NAME EXPORTER_URL $EXPORTER_URL
           cf add-network-policy $APP_NAME $EXPORTER_NAME
-          CF_DOCKER_PASSWORD=${{ secrets.DOCKER_PAT }} cf push $APP_NAME \
-            --docker-image $DOCKER_TAG \
-            --docker-username ${{ github.actor }}
+          cf push $APP_NAME --docker-image $DOCKER_TAG
