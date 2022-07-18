@@ -39,5 +39,5 @@ jobs:
           cf auth $CF_DEPLOY_USERNAME $CF_DEPLOY_PASSWORD
           cf target -o $CF_ORG -s $CF_SPACE
           cf set-env $APP_NAME EXPORTER_URL $EXPORTER_URL
-          cf add-network-policy $APP_NAME $EXPORTER_NAME
           cf push $APP_NAME --docker-image $DOCKER_TAG
+          cf add-network-policy $APP_NAME $EXPORTER_NAME
